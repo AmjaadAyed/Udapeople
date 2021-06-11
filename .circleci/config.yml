@@ -133,38 +133,48 @@ jobs:
       - image: amazon/aws-cli
     steps:
       - checkout
-      - run: yum -y install tar gzip
+
       - run:
-          name: Ensure back-end infrastructure exists
+          name: Install prerequsites
           command: |
+            yum -y install tar gzip jq git
+      - run:
+          name: Ensure backend infrastructure exists
+          command: |
+            # build-backend:
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
               --tags project=udapeople \
-              --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
-            URLS=$(aws ec2 describe-instances --region us-east-1 \
-              --query "Reservations[*].Instances[*].PublicIpAddress"  \
-              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}"  \
-              --output text)
-            curl -H "Content-Type: text/plain" -H "token: 96de3f6f-20b4-4fc1-9a39-e9c22015d63d" \
-              --request PUT \
-              --data "$URLS" https://api.memstash.io/values/url_${CIRCLE_WORKFLOW_ID}
+              --stack-name "backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7}\
+              --region us-east-1
       - run:
-          name: Ensure front-end infrastructure exist
+          name: Add backend ip to ansible inventory
           command: |
-            aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project=udapeople \
-              --stack-name "udapeople-frontend-${CIRCLE_WORKFLOW_ID}" \
-              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
-             ARN=$(aws s3 ls | grep udapeople)
-             curl -H "Content-Type: text/plain" -H "token: 96de3f6f-20b4-4fc1-9a39-e9c22015d63d" \
-               --request PUT \
-               --data "$ARN" https://api.memstash.io/values/arn_${CIRCLE_WORKFLOW_ID}
+            BACKEND_IP=`aws ec2 describe-instances \
+              --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query "Reservations[*].Instances[*].[PublicDnsName]" \
+              --output text | tr -d '\n'`
+            echo $BACKEND_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+            # put it in the shared memory
+            curl -H "Content-Type: text/plain" \
+              -H "token: e38aee29-a976-4696-843d-2d115c52219a" \
+              --request PUT \
+              --data "$BACKEND_IP" https://api.memstash.io/values/BACKEND_IP_${CIRCLE_WORKFLOW_ID:0:7}
+      - run:
+          name: Add back-end ip to ansible inventory
+          command: |
+            aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicIpAddress' \
+            --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID}" \
+            --output text >> .circleci/ansible/inventory.txt
+            BACKEND_IP=`cat .circleci/ansible/inventory.txt | head -2 | tail -1`
+            echo "BACKEND_IP: ${BACKEND_IP}"
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.txt 
       # Here's where you will add some code to rollback o
 
 
