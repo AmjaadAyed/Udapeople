@@ -28,32 +28,6 @@ commands:
             then
             #  cd ~/project/backend
             #  npm install
-AmjaadAyed /
-Udapeople
-
-1
-0
-
-    0
-
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-
-    Settings
-
-Udapeople/.circleci/
-in
-master
-
-1
-
-
             #  Add revert code here. You can find this in the Getting Started section.
               exit 1
             fi
