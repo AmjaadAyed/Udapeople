@@ -189,10 +189,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apk add --update ansible # install the dependencies needed for your playbook
-            sudo apk add tar gzip curl jq
-            sudo pip install awscli
-      - run: cat ./.circleci/ansible/inventory.txt
+            apt -y update
+            apt -y install jq tar gzip git curl
+      - attach_workspace:
+          at: ~/
       - run:
           name: "Get the IP Address of the Backend EC2 instance and create inventory"
           command: |
