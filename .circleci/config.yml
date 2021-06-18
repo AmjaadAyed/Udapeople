@@ -207,22 +207,36 @@ jobs:
       # Here's where you will add some code to rollback on failure      
  
 
-#   run-migrations:
-#     docker:
-#       # Docker image here that supports NodeJS
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Run migrations
-#           command: |
-#             # Your code here
-#             exit 1
-#       - run:
-#           name: Send migration results to memstash
-#           command: |
-#             # Your code here
-#             exit 1
-#      # Here's where you will add some code to rollback on failure      
+  run-migrations:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install awscli
+      - run:
+          name: Run migrations and send results to memstash
+          command: |
+            cd backend
+            npm run migrations > migrations.txt
+            if [[ $(cat migrations.txt) =~ "has been executed successfully" ]]
+            then
+              echo "PUT 'success' to MEMSTASH"
+              curl \
+                  -H "Content-Type: text/plain" \
+                  -H "token:migration_${CIRCLE_WORKFLOW_ID}" \
+                  --request PUT \
+                  --data "success" https://api.memstash.io/values/migrations
+            else
+              echo "PUT 'fail' to MEMSTASH"
+              curl \
+                  -H "Content-Type: text/plain" \
+                  -H "token:migration_${CIRCLE_WORKFLOW_ID}" \
+                  --request PUT \
+                  --data "fail" https://api.memstash.io/values/migrations      
 
 #   deploy-frontend:
 #     docker:
