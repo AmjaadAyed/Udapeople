@@ -234,7 +234,15 @@ jobs:
             #echo "running migrations!!!!!!"
             #npm run migrations
             #cat  /home/circleci/project/backend/migrations_dump.txt   
+      - run:
+          name: Send migration results to memstash
+          command: |
+            cd backend
+            pwd
+            sudo cat ~/project/backend/migrations_dump.txt #/root/project/circleci/project/backend/migrations_dump.txt
 
+
+            
 #   deploy-frontend:
 #     docker:
 #       # Docker image here that supports AWS CLI
