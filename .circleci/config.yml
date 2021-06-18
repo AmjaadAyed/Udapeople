@@ -241,8 +241,18 @@ jobs:
             pwd
             sudo cat ~/project/backend/migrations_dump.txt #/root/project/circleci/project/backend/migrations_dump.txt
 
+            if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
+            then
+              curl -H "Content-Type: text/plain" -H "token: ce-${CIRCLE_WORKFLOW_ID}" --request PUT --data "1" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID}
+              echo migration_${CIRCLE_WORKFLOW_ID}
+              echo "SUCCESS = 1"
+            else
+              echo $(curl -H "Content-Type: text/plain" -H "token: ce-${CIRCLE_WORKFLOW_ID}" --request PUT --data "0" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID} | grep "No migrations")
+              echo "migration ID" migration_${CIRCLE_WORKFLOW_ID}
+              echo "FAIL = 0"
+            fi\
 
-            
+
 #   deploy-frontend:
 #     docker:
 #       # Docker image here that supports AWS CLI
