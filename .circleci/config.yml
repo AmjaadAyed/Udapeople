@@ -264,19 +264,23 @@ jobs:
             yum -y install nodejs
             yum -y install tar gzip
       - run:
-          name: Get backend url and deploy frontend objects
-          no_output_timeout: 30m
+          name: Get backend url
           command: |
-            BACKEND_IP=$(curl -H "token: ${CIRCLE_WORKFLOW_ID:0:7}" --request GET https://api.memstash.io/values/backendip)
-            export API_URL="http://${BACKEND_IP}:3030"
+            BACKEND_IP=$(grep -v "[web]" /tmp/.circleci/ansible/inventory.txt)
+            export API_URL="https://${BACKEND_IP}:3030"
+            echo "${API_URL}"
             echo "${API_URL}" >> "frontend/.env"
-            cat frontend/.env
+      - run:
+          name: Deploy frontend objects
+          command: |
             cd frontend
             npm install
             npm run build
-            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID}".tar.gz dist
-            aws s3 sync dist s3://udapeople-${CIRCLE_WORKFLOW_ID}
-
+      - run:
+          name: Copy to S3
+          command: |
+            aws s3 cp ./frontend/dist s3://udapeople-frontend-${CIRCLE_WORKFLOW_ID} --recursive
+            
 #   deploy-backend:
 #     docker:
 #       # Docker image here that supports Ansible
