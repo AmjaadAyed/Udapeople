@@ -275,7 +275,7 @@ jobs:
             npm run build
             ls -alh
       - run:
-         name: Deploy frontend objects
+          name: Deploy frontend objects
           command: |
             export API_URL=$(curl \
                 -H "Content-Type: text/plain" \
