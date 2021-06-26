@@ -275,7 +275,7 @@ jobs:
             npm run build
             ls -alh
       - run:
-         name: Deploy frontend objects
+          name: Deploy frontend objects
           command: |
             cd frontend
             #cp -r node_modules ./dist/
