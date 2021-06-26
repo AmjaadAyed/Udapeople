@@ -283,14 +283,20 @@ jobs:
             # deploy to s3 bucket
             aws s3 cp ./dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       - run:
-          name: Create S3 bucket url
+          name: Deploy frontend objects
           command: |
-            LOCATION=`aws s3api get-bucket-location --bucket udapeople-${CIRCLE_WORKFLOW_ID:0:7} --output text | tr -d '\n'`
-            S3_URL="udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-${LOCATION}.amazonaws.com/index.html"
-            echo $S3_URL
-            curl -H "Content-Type: text/plain" -H "token: e38aee29-a976-4696-843d-2d115c52219a" \
-            --request PUT --data "$S3_URL" \
-            https://api.memstash.io/values/S3_URL_${CIRCLE_WORKFLOW_ID:0:7}
+            export API_URL=$(curl \
+                -H "Content-Type: text/plain" \
+                -H "token:api_url_${CIRCLE_WORKFLOW_ID}" \
+                --request GET https://api.memstash.io/values/api_url)
+            echo ENVIRONMENT=production > "frontend/.env"
+            echo NODE_ENV=production >> "frontend/.env"
+            echo API_URIL=$API_URL >> "frontend/.env"
+            cd frontend
+            npm install
+            npm run build
+            cd dist
+            aws s3 sync . s3://udapeople-"${CIRCLE_WORKFLOW_ID}" --delete
            
             
 #   deploy-backend:
