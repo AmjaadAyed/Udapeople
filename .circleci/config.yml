@@ -275,8 +275,6 @@ jobs:
             npm run build
             ls -alh
       - run:
-          name: Deploy frontend objects
-          command: |
           name: Deploy frontend objects to s3 bucket
           command: |
             cd frontend
